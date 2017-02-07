@@ -1,0 +1,78 @@
+.main-container{
+  width:80%;
+  height:100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.header{
+  text-align: center;
+}
+
+.grid-container{
+  background-color: blue;
+}
+
+.grid-row{
+  clear:both;
+}
+
+.miss{
+  background-color: rgb(70, 130, 180);
+}
+
+.hit{
+  background-color: rgb(0, 255, 127);
+}
+
+.sunkPart{
+  color: red;
+}
+
+.sunk{
+  background-color: #EE82EE;
+}
+
+.validHover{
+  background-color: rgb(135, 206, 235);
+}
+.invalidHover{
+  background-color: rgb(255,69,0);
+}
+
+.grid-col{
+  font-weight: bold;
+  float:left;
+  width:10%;
+  height:3em;
+  text-align: center;
+  padding:1em;
+  border:solid 0.1em black;
+}
+.grid-col-no-border{
+  float:left;
+  width:10%;
+  height:3em;
+  text-align: center;
+  padding:1em;
+}
+
+/* centered columns styles */
+.row-centered {
+    text-align:center;
+    background-color: red;
+}
+.col-centered {
+    display:inline-block;
+    background-color: blue;
+}
+
+.button-top-margin {
+  margin-top:2em;
+}
+
+.grid-label{
+  margin:0 auto;
+  background-color: green;
+
+}
