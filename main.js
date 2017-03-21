@@ -36,46 +36,33 @@ function enable_hover(){
   });
 }
 
+ function Player(id, size){
+   this.gameBoard = Array.apply(null, Array(size + 1)).map(function() { return 0 });
 
- var player1 = {
-    gameBoard:[],
-    ships:[{name:"carier", number:1, size:1, horizontal:null, coordinates:[]} ,
-           {name:"battleship", number:2, size:2, horizontal:null, coordinates:[]} ,
-           {name:"cruiser", number:3, size:3, horizontal:null, coordinates:[]} ,
-           {name:"submarine", number:4, size:4,horizontal:null, coordinates:[]} ,
-           {name:"destroyer", number:5, size:5,horizontal:null, coordinates:[]}
-    ],
-    shipsInGame:[],
-    id: 1,
-    shots: 0,
-    hits: 0,
-    history:[]
-  };
+   this.ships = [ {name:"carier", number:1, size:1, horizontal:null, coordinates:[]} ,
+                  {name:"battleship", number:2, size:2, horizontal:null, coordinates:[]} ,
+                  {name:"cruiser", number:3, size:3, horizontal:null, coordinates:[]} ,
+                  {name:"submarine", number:4, size:4,horizontal:null, coordinates:[]} ,
+                  {name:"destroyer", number:5, size:5,horizontal:null, coordinates:[]}
+                ];
+  this.shipsInGame = [];
+  this.id =  id;
+  this.shots = 0;
+  this.hits = 0;
+  this.history = [];
+ }
 
- var player2 = {
-    gameBoard:[],
-    ships:[{name:"carier", number:1, size:1, horizontal:null, coordinates:[]} ,
-           {name:"battleship", number:2, size:2, horizontal:null, coordinates:[]} ,
-           {name:"cruiser", number:3, size:3, horizontal:null, coordinates:[]} ,
-           {name:"submarine", number:4, size:4,horizontal:null, coordinates:[]} ,
-           {name:"destroyer", number:5, size:5,horizontal:null, coordinates:[]}
-    ],
-    shipsInGame:[],
-    id: 2,
-    shots: 0,
-    hits: 0,
-    history:[]
- };
+ function Game(size){
+   this.player1 = new Player(1, size);
+   this.player2 = new Player(2, size);
+   this.stage =  "ship-placement";
+   this.turn = 1;
+   this.size = size;
+   this.currentShip = 1;
+   this.horizontal = true;
+ }
 
-var game = {
-  player1: new Object(player1),
-  player2: new Object(player2),
-  stage: "ship-placement",
-  turn: 1,
-  size: 9,
-  currentShip: 1,
-  horizontal:true
-};
+ var game;
 
 function createGrid(size){
   let gridString = "";
@@ -108,8 +95,9 @@ function rotateShip(){
 
 function startGame(){
   $("#start-button").css("display", "none");
-
   const size = 9;
+
+  game = new Game(size);
 
   createGrid(size);
 
@@ -117,7 +105,7 @@ function startGame(){
 
   enable_hover();
 
-  $(".main-container").append(`</br><button class="btn-warning" onClick="rotateShip()">Rotate</button>`)
+  $("#rotateButton").css("display","block");
 
 
   for(let i = 0; i < game.size; ++i){
@@ -140,7 +128,11 @@ function getBoatById(boatList, id){
 
 function removeBoatById(boatList, id){
   for(let i = 0; i < boatList.length; ++i){
-    if(boatList[i].number === id) boatList.splice(i, 1);
+    console.log(boatList[i].number + " - " + id);
+    if(boatList[i].number === id) {
+      console.log("REMOVED");
+      boatList.splice(i, 1);
+    }
   }
 }
 
@@ -152,28 +144,27 @@ function changeTurn(){
   game.turn = game.turn === 1 ? 2 : 1;
   console.log("turn: " + game.turn);
   let player = game.turn === 1 ? game.player1 : game.player2;
-  for(let x = 0; x < game.size; ++x){
-    for(let y = 0; y < game.size; ++y){
-        if(player.gameBoard[x][y]=== -2){
-          console.log("git2");
-          $(`#button${x}-${y}`).removeAttr("onClick");
-          $(`#button${x}-${y}`).addClass("hit");
-        }
-        else if(player.gameBoard[x][y]=== -1){
-          console.log("miss2");
-          $(`#button${x}-${y}`).removeAttr("onClick");
-          $(`#button${x}-${y}`).addClass("miss");
-        }
-        else if(player.gameBoard[x][y] > 0 && player.gameBoard[x][y] < 6){
-          $(`#button${x}-${y}`).html(player.gameBoard[x][y]);
-        }
-        else if(player.gameBoard[x][y] === -3){
-          $(`#button${x}-${y}`).html("x");
-          $(`#button${x}-${y}`).addClass("sunkPart");
-          $(`#button${x}-${y}`).removeAttr("onClick");
-        }
+
+/*  player.shipsInGame.forEach(function(boat){
+    boat.coordinates.forEach(function(coordinate){
+      $(`#button${coordinate.x}-${coordinate.y}`).html(boat.number);
+    });
+  });*/
+
+  player.history.forEach(function(event){
+    if(event.type === 1){
+      $(`#button${event.x}-${event.y}`).html("x");
+      $(`#button${event.x}-${event.y}`).addClass("sunkPart");
     }
-  }
+    else if(event.type === 2){
+      $(`#button${event.x}-${event.y}`).removeAttr("onClick");
+      $(`#button${event.x}-${event.y}`).addClass("hit");
+    }
+    else if(event.type === 3){
+      $(`#button${event.x}-${event.y}`).removeAttr("onClick");
+      $(`#button${event.x}-${event.y}`).addClass("miss");
+    }
+  });
 }
 
 
@@ -183,6 +174,7 @@ function placementDone(){
     game.stage = "main";
     $(".grid-col").unbind('mouseenter mouseleave');
     printStatus();
+    $("#rotateButton").css("display","none");
   }else{
     $("#status-text").html(`Player ${game.turn}, place your ${game.player2.ships[0].name}!`);
   }
@@ -270,11 +262,9 @@ function makeMove(player, opponenet, elementId){
     const boat = getBoatById(opponenet.shipsInGame, opponenet.gameBoard[xIndex][yIndex]);
     console.log(boat);
     for(let i = 0; i < boat.coordinates.length; ++i){
-      console.log(boat.coordinates);
-      console.log(xIndex + "- " + yIndex);
       if(boat.coordinates[i].x === parseInt(xIndex) && boat.coordinates[i].y === parseInt(yIndex) && boat.coordinates[i].alive === true){
         boat.coordinates[i].alive = false;
-        opponenet.gameBoard[xIndex][yIndex] = -3;
+        opponenet.history.push({x:xIndex, y:yIndex, type:1});
       }
     }
     let stillAlive = false;
@@ -284,20 +274,15 @@ function makeMove(player, opponenet, elementId){
       }
     }
     if(!stillAlive){
-      console.log("KIILLLED");
-      removeBoatById(opponenet.shipsInGame, opponenet.gameBoard[yIndex][xIndex]);
+      removeBoatById(opponenet.shipsInGame, opponenet.gameBoard[xIndex][yIndex]);
     }
-  //  opponenet.gameBoard[yIndex][xIndex] = -2;
-    player.gameBoard[xIndex][yIndex] = -2;
+    player.history.push({x:xIndex, y:yIndex, type:2});
     $(`#${elementId}`).addClass("hit");
 
   }else{
-  //  opponenet.gameBoard[yIndex][xIndex] = -1;
-    player.gameBoard[xIndex][yIndex] = -1;
+    player.history.push({x:xIndex, y:yIndex, type:3});
     $(`#${elementId}`).addClass("miss");
   }
-  //$(`.grid-col`).removeAttr("onClick");
-  console.log(player.gameBoard);
 }
 
 function toggle(elementId){
@@ -326,10 +311,21 @@ function toggle(elementId){
     }
     if(game.player1.shipsInGame.length === 0 ){
       $("#status-text").html(`Player 2 wins!`);
+      $("#start-button").css("display","block");
+      $("#grid-container").html("");
+      $("#rotateButton").css("display","none");
+
+      return;
     }
 
     if(game.player2.shipsInGame.length === 0){
       $("#status-text").html(`Player 1 wins!`);
+      $("#start-button").css("display","block");
+      $("#grid-container").html("");
+      $("#rotateButton").css("display","none");
+
+      return;
+
     }
     setTimeout(function(){
       changeTurn(elementId);
